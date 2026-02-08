@@ -1,0 +1,62 @@
+name: "Semantic Release: Create"
+description: "Run semantic-release with optional major tag update when using the default generated config"
+inputs:
+  working-dir:
+    description: The working directory for the release
+    required: false
+    default: '.'
+  update-release-major-tag:
+    description: Whether to update the major version tag
+    required: false
+    default: 'false'
+  github-token:
+    description: GitHub token for authentication
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Ensure working directory exists
+      shell: bash
+      run: mkdir -p ${{ inputs.working-dir }}
+
+    - name: Generate default `.releaserc.json`
+      id: gen
+      shell: bash
+      working-directory: ${{ inputs.working-dir }}
+      run: |
+        if [ ! -f .releaserc.json ]; then
+          cat > .releaserc.json << 'EOF'
+        {
+          "branches": ["main"],
+          "plugins": [
+            "@semantic-release/commit-analyzer",
+            "@semantic-release/release-notes-generator",
+            "@semantic-release/github"
+          ]
+        }
+        EOF
+          echo "generated=true" >> "$GITHUB_OUTPUT"
+          echo "Generated default .releaserc.json"
+        else
+          echo "generated=false" >> "$GITHUB_OUTPUT"
+          echo ".releaserc.json already exists, skipping generation"
+        fi
+
+    - name: Inject `semantic-release-major-tag` plugin
+      if: ${{ inputs.update-release-major-tag == 'true' && steps.gen.conclusion == 'success' }}
+      shell: bash
+      working-directory: ${{ inputs.working-dir }}
+      run: |
+        set -euo pipefail
+        tmp="$(mktemp)"
+        jq '.plugins += ["semantic-release-major-tag"]' \
+          .releaserc.json > $tmp && mv $tmp .releaserc.json
+        echo "Injected major tag update plugin into .releaserc.json"
+
+    - name: Run `semantic-release`
+      shell: bash
+      working-directory: ${{ inputs.working-dir }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: npx semantic-release

@@ -1,4 +1,4 @@
-name: "Release: Create"
+name: 'Release: Create'
 
 run-name: "Create release from ${{ github.ref_name }}"
 

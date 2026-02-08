@@ -55,8 +55,30 @@ runs:
         echo "Injected major tag update plugin into .releaserc.json"
 
     - name: Run `semantic-release`
+      id: release
       shell: bash
       working-directory: ${{ inputs.working-dir }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
-      run: npx semantic-release
+      run: |
+        set -euo pipefail
+        output=$(npx semantic-release 2>&1 | tee /dev/stderr)
+        if echo "$output" | grep -qE 'There are no relevant changes'; then
+          echo "new-release-published=false" >> "$GITHUB_OUTPUT"
+          echo "new-release-version=" >> "$GITHUB_OUTPUT"
+        elif echo "$output" | grep -qE 'Published release|Created tag'; then
+          version=$(echo "$output" | grep -oE 'Published release [0-9]+\.[0-9]+\.[0-9]+' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+          echo "new-release-published=true" >> "$GITHUB_OUTPUT"
+          echo "new-release-version=${version}" >> "$GITHUB_OUTPUT"
+        else
+          echo "new-release-published=false" >> "$GITHUB_OUTPUT"
+          echo "new-release-version=" >> "$GITHUB_OUTPUT"
+        fi
+
+outputs:
+  new-release-published:
+    description: Whether a new release was published
+    value: ${{ steps.release.outputs.new-release-published }}
+  new-release-version:
+    description: The version of the new release
+    value: ${{ steps.release.outputs.new-release-version }}

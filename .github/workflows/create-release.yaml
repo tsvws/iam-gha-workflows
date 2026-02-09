@@ -24,7 +24,23 @@ jobs:
           token: ${{ secrets.GH_TOKEN }}
 
       - name: Create semantic release
+        id: release
         uses: ./semantic-release-create
         with:
           github-token: ${{ secrets.GH_TOKEN }}
           update-release-major-tag: true
+
+      - name: Label workflow run with version
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          version="${{ steps.release.outputs.new-release-version }}"
+          published="${{ steps.release.outputs.new-release-published }}"
+          if [ "$published" = "true" ] && [ -n "$version" ]; then
+            label="Released v${version}"
+          else
+            label="No release"
+          fi
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }} \
+            --method PATCH --field "name=${label}"

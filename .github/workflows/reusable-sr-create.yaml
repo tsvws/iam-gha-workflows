@@ -25,7 +25,7 @@ jobs:
           token: ${{ secrets.personal_access_token }}
 
       - name: Make sure working dir `${{ inputs.working_dir }}` exists
-        run mkdir -vp ${{ inputs.working_dir}}
+        run: mkdir -vp ${{ inputs.working_dir }}
 
       - name: Create semantic release
         uses: ./semantic-release-create

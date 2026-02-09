@@ -79,3 +79,11 @@ runs:
           echo "new-release-published=false" >> "$GITHUB_OUTPUT"
           echo "new-release-version=" >> "$GITHUB_OUTPUT"
         fi
+
+outputs:
+  new-release-published:
+    description: Whether a new release was published
+    value: ${{ steps.release.outputs.new-release-published }}
+  new-release-version:
+    description: The version of the new release
+    value: ${{ steps.release.outputs.new-release-version }}

@@ -60,9 +60,14 @@ runs:
       working-directory: ${{ inputs.working-dir }}
       env:
         GITHUB_TOKEN: ${{ inputs.github-token }}
+        UPDATE_MAJOR_TAG: ${{ inputs.update-release-major-tag }}
       run: |
         set -euo pipefail
-        output=$(npx semantic-release 2>&1 | tee /dev/stderr)
+        npx_args=("-p" "semantic-release")
+        if [ "$UPDATE_MAJOR_TAG" = "true" ]; then
+          npx_args+=("-p" "semantic-release-major-tag")
+        fi
+        output=$(npx "${npx_args[@]}" semantic-release 2>&1 | tee /dev/stderr)
         if echo "$output" | grep -qE 'There are no relevant changes'; then
           echo "new-release-published=false" >> "$GITHUB_OUTPUT"
           echo "new-release-version=" >> "$GITHUB_OUTPUT"
@@ -74,11 +79,3 @@ runs:
           echo "new-release-published=false" >> "$GITHUB_OUTPUT"
           echo "new-release-version=" >> "$GITHUB_OUTPUT"
         fi
-
-outputs:
-  new-release-published:
-    description: Whether a new release was published
-    value: ${{ steps.release.outputs.new-release-published }}
-  new-release-version:
-    description: The version of the new release
-    value: ${{ steps.release.outputs.new-release-version }}

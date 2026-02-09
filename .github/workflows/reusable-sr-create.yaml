@@ -28,7 +28,7 @@ jobs:
         run: mkdir -vp ${{ inputs.working_dir }}
 
       - name: Create semantic release
-        uses: ./semantic-release-create
+        uses: tsvws/iam-gha-workflows/semantic-release-create@v1
         with:
           github-token: ${{ secrets.personal_access_token }}
           update-release-major-tag: true

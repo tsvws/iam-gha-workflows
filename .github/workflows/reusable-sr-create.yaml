@@ -7,7 +7,7 @@ on:
     inputs:
       working_dir:
         type: string
-        required: true
+        required: false
         default: .semantic-release
     secrets:
       personal_access_token:

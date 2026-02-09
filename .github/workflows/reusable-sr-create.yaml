@@ -1,0 +1,34 @@
+name: "Reusable: SR: Create"
+
+run-name: "Create release from ${{ github.ref_name }}"
+
+on:
+  workflow_call:
+    inputs:
+      working_dir:
+        type: string
+        required: true
+        default: .semantic-release
+    secrets:
+      personal_access_token:
+        required: true
+
+jobs:
+  sr_create:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          token: ${{ secrets.personal_access_token }}
+
+      - name: Make sure working dir `${{ inputs.working_dir }}` exists
+        run: mkdir -vp ${{ inputs.working_dir }}
+
+      - name: Create semantic release
+        uses: ./semantic-release-create
+        with:
+          github-token: ${{ secrets.personal_access_token }}
+          update-release-major-tag: true

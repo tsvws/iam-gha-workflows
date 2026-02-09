@@ -80,6 +80,17 @@ runs:
           echo "new-release-version=" >> "$GITHUB_OUTPUT"
         fi
 
+    - name: Add version label to workflow summary
+      shell: bash
+      run: |
+        version="${{ steps.release.outputs.new-release-version }}"
+        published="${{ steps.release.outputs.new-release-published }}"
+        if [ "$published" = "true" ] && [ -n "$version" ]; then
+          echo "### :rocket: Released v${version}" >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "### :no_entry_sign: No release published" >> "$GITHUB_STEP_SUMMARY"
+        fi
+
 outputs:
   new-release-published:
     description: Whether a new release was published
